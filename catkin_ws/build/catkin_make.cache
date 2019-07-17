@@ -1,0 +1,2 @@
+Onboard-SDK-ROS-3.2/dji_sdk:Onboard-SDK-ROS-3.2/dji_sdk_demo:Onboard-SDK-ROS-3.2/dji_sdk_dji2mav:Onboard-SDK-ROS-3.2/dji_sdk_lib:Onboard-SDK-ROS-3.2/dji_sdk_web_groundstation
+-DCATKIN_DEVEL_PREFIX=/home/nvidia/catkin_ws/devel -DCMAKE_INSTALL_PREFIX=/home/nvidia/catkin_ws/install -G Unix Makefiles

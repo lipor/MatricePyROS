@@ -1,0 +1,1 @@
+/home/nvidia/Onboard-SDK-3.2/build/bin/libdjiosdk-core.a

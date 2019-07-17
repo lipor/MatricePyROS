@@ -1,0 +1,8 @@
+prefix=/home/nvidia/catkin_ws/devel
+
+Name: dji_sdk_lib
+Description: Description of dji_sdk_lib
+Version: 0.1.9
+Cflags: -I/home/nvidia/catkin_ws/src/Onboard-SDK-ROS-3.2/dji_sdk_lib/include
+Libs: -L/home/nvidia/catkin_ws/devel/lib -ldji_sdk_lib
+Requires: 
