@@ -81,13 +81,11 @@ def scan():
 	    temperature = int(important_info[9:11], 16)
 	    print("VOC: {} ppm, Humidity: {} %, Temperature: {} C").format(voc, humidity, temperature)
 	    is_done = True
-	if(current_time - start_time > 60):
+	if(current_time - start_time > 300):
 	    is_done = True
 	    print("Atmotube scanner timed out.")
     return [voc, humidity, temperature]
-	
-	
-    
 
-    
-    
+if __name__ == "__main__":
+    while(True):
+	scan()
