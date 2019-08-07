@@ -24,7 +24,7 @@ terminal_state_length = 0.02            # Terminal state length is fixed for the
 current_pos = 0.0
 current_setpoint = 0.0		
 height = 10.0
-theta = 0.65           
+theta = 0.35           
 dist_thresh = 0.35   
 time_thresh = 5.0
 count1 = 0
@@ -157,33 +157,34 @@ def callback(local_position):
     new_setpoint = Evaluate (start,end)           # calculates the new setpoint
     print("new position recevied from Evaluate is %f"%new_setpoint)
 
+
+    if (count1 > 450): #To update the graph so it doesn't "time out"
+	queue.put([0,0,True])
+	count1 = 0
+    count1 = count1 +1
+    print count1
     if (new_setpoint < 0 ):						# if new setpoint is negative, it means we are in terminal state and need to return back to home 
 	drone.local_position_navigation_send_request(0, 0, 10)
 	if (abs(local_position.x) < 0.05 and abs(local_position.y) < 0.05):
 	    drone.gohome()
+ 
     else:
-	if (new_setpoint is not current_setpoint):
+	if (new_setpoint != current_setpoint):
 	################################################################################################################
-	    print new_setpoint, current_setpoint
+	    print float(new_setpoint), float(current_setpoint)
 	    print("New setpoint: %f"%(scale*new_setpoint))
 
 	    drone.local_position_navigation_send_request((scale*new_setpoint),0,height)   	# Otherwise send drone to the new position for Sampling 
-   	    start_time = time.time()
-	else:
-	    queue.put([0,0,True], True, 1)
+
+            current_setpoint = new_setpoint
 	
-        current_setpoint = new_setpoint
         #This loops make sure that the drone reaches the dist_thresh and stays there for time_thresh seconds 
 	# need to add the sampling code here, Right Now faking it
-
-	if (count1 > 100000): #To update the graph so it doesn't "time out"
-	    queue.put([0,0,True])
-	    count1 = 0
-	count1 = count1 +1
+   	start_time = time.time()
 
 	count2 = 0
 	while(True):
-	    if (abs( current_pos - (scale*current_setpoint)) > 0.35):            
+	    if (abs( current_pos - (scale*new_setpoint)) > dist_thresh):            
 		break
 	    else:        
 		current_time = time.time()
@@ -192,13 +193,13 @@ def callback(local_position):
 		if (count2 > 100000): #To update the graph so it doesn't "time out"
 		    queue.put([0,0,True])
 		    count2 = 0
+	
 		count2 = count2 +1
 
-
-	        if (abs(current_time - start_time) > 5.0):
+	        if (abs(current_time - start_time) > time_thresh):
+                    
 		# Do the Sampling here     
 		    if (end > start):
-			print "a"
 		        if (current_setpoint > theta):
                             queue.put([current_setpoint, 0, False])
 			    end = start
@@ -209,7 +210,6 @@ def callback(local_position):
 			    start = current_setpoint
 			    break
 		    else : 
-			print "b"
 		        if (current_setpoint < theta):
                             queue.put([current_setpoint, 1, False])
 			    end = start
@@ -220,9 +220,7 @@ def callback(local_position):
 			    start = current_setpoint	
 			    break
 
-
 if __name__ == '__main__':
-
     drone = DJIDrone()
     drone.request_sdk_permission_control()
     drone.arm_drone()   
@@ -231,7 +229,5 @@ if __name__ == '__main__':
     plotter_thread = threading.Thread(target=plot, args=(queue,))
     plotter_thread.daemon = True
     plotter_thread.start()
-    print "electric"
-    queue.put([1,1,False])
-    print "boogaloo"
+    queue.put([0,0,True])
     listener()
