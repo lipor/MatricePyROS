@@ -11,7 +11,7 @@ import numpy as np
 import datetime
 import threading
 import atmotube_scanner
-import plotter
+import gaussiantest
 
 longitude = 0.0
 latitude = 0.0
@@ -38,16 +38,19 @@ def get_data():
     
 def write_to_file(latitude, longitude, voc, humidity, temp):
     now = datetime.datetime.now()
-
-    f = open('catkin_ws/src/Onboard-SDK-ROS-3.2/dji_sdk_demo/script/Atmotube/data/' + now.strftime("%Y-%m-%d") + '.dat', 'ab+')
-
+    #f = open('catkin_ws/src/Onboard-SDK-ROS-3.2/dji_sdk_demo/script/Atmotube/data/' + now.strftime("%Y-%m-%d") + '.dat', 'ab+')
+    f = open('catkin_ws/src/Onboard-SDK-ROS-3.2/dji_sdk_demo/script/Atmotube/data/2019-07-25aaaa.dat', 'ab+')
     data = [[now.isoformat(), latitude, longitude, voc, humidity, temp]] 
     np.savetxt(f, data,fmt='%s')
     f.close()
 
 
 if __name__ == "__main__":
-    plotter = plotter.Plotter()
+    now = datetime.datetime.now()
+    #f = open('catkin_ws/src/Onboard-SDK-ROS-3.2/dji_sdk_demo/script/Atmotube/data/' + now.strftime("%Y-%m-%d") + '.dat', 'a+')
+    f = open('catkin_ws/src/Onboard-SDK-ROS-3.2/dji_sdk_demo/script/Atmotube/data/2019-07-25aaaa.dat', 'a+')
+    f.close()
+    plotter = gaussiantest.Plotter()
     plotter_thread=threading.Thread(target=plotter.run)
     plotter_thread.start()
 

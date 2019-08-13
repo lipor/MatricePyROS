@@ -12,9 +12,10 @@ from itertools import product
 class Plotter():
     def run(self):
         global m
-        global start_index
-	start_index = 0
-        m = Basemap(llcrnrlat = 45.50, llcrnrlon = -122.691631, urcrnrlat = 45.532517, urcrnrlon = -122.663240, resolution='i', projection='merc')
+        old_data = []
+        m = Basemap(llcrnrlat = 45.507269, llcrnrlon = -122.691631, urcrnrlat = 45.532517, urcrnrlon = -122.663240, resolution='i', projection='merc')
+	#m = Basemap(projection='merc',llcrnrlat=-80,urcrnrlat=80, llcrnrlon=-180,urcrnrlon=180,lat_ts=20,resolution='c') 
+
 	m.drawmapboundary(fill_color='#DDEEFF')
 	m.drawcoastlines(color='gray', zorder=2)
 	m.drawcountries(color='gray', zorder=2)
@@ -24,42 +25,51 @@ class Plotter():
         m.readshapefile('/home/nvidia/catkin_ws/src/Onboard-SDK-ROS-3.2/dji_sdk_demo/script/Atmotube/maps/multilinestrings', 'multilinestrings')
         m.readshapefile('/home/nvidia/catkin_ws/src/Onboard-SDK-ROS-3.2/dji_sdk_demo/script/Atmotube/maps/multipolygons', 'multipolygons')
         m.readshapefile('/home/nvidia/catkin_ws/src/Onboard-SDK-ROS-3.2/dji_sdk_demo/script/Atmotube/maps/points', 'points')
-
-	plt.ion()
-	plt.show()
+	#plt.ion()
+	#plt.show()
         
 	lats = []
 	lons = []
 	temps = []
+	to_plot = self.read_file(True)
+
+	for line in to_plot:
+	    data = line.split(" ")
+	    lats.append(float(data[1]))
+	    lons.append(float(data[2]))
+	    adjusted_temp = (float(data[5][:-1]) + 30.0) / 70.0
+	    temps.append(adjusted_temp)
+	    self.plot_data(data)
+	    if len(lats) > 10:
+	        latp, lonp, tempp = self.gaussian(lats, lons, temps)
+
+	        unadjusted_tempp = []
+	        new = []
+       	        for i in range(len(tempp)):
+                    new = []
+	            for j in range(len(tempp[0])):
+		        new.append(tempp[i][j] * 70.0 -30)
+	            unadjusted_tempp.append(new)
+	        print "I am the waffle man"
+	        m.contourf(lonp, latp,unadjusted_tempp, cmap = cm.plasma, latlon = True)
 
 
-	while plt.get_fignums():
-	    to_plot = self.read_file()
-            if to_plot != []:
-	        for point in to_plot:
-	            data = point.split(" ")
-		    if data[1] == 0.0 or data[2] == 0.0:
-			break
-	            lats.append(float(data[1]))
-	            lons.append(float(data[2]))
-	            adjusted_temp = (float(data[5][:-1]) + 30.0) / 70.0 #0 to 1
-		    if adjusted_temp < 0:
-			adjusted_temp = 0
-		    elif adjusted_temp > 1:
-			adjusted_temp = 1
-	            temps.append(adjusted_temp)
-	            self.plot_data(data)
-		    if not plt.get_fignums():
-			break
-		if len(lats) > 10:
-		    latp, lonp, tempp = self.gaussian(lats, lons, temps)
-                    m.contourf(lonp, latp, tempp, cmap = cm.plasma, latlon = True)
-		    plt.draw()
-		    plt.pause(0.1)
 
-	    else:
-		plt.draw()
-		plt.pause(0.1)
+
+	to_plot = []
+ 	#plt.draw()
+	#plt.pause(0.01)
+#        while True: 
+#	    data = self.read_file(False).split(" ")
+#	    lats.append(line[1])
+#	    lons.append(line[2])
+#	    temps.append(line[5])
+#	    self.plot_data(data)
+#            plt.draw()
+#	    plt.pause(0.01)
+#            if not plt.get_fignums():
+#                break
+#            break
         plt.show()
 
     def plot_data(self,data):
@@ -71,19 +81,18 @@ class Plotter():
 	temp = data[5][:-1]
         adjusted_temp = (float(temp) + 30.0) / 70.0
         m.plot(float(lon), float(lat), color=cm.plasma(adjusted_temp), marker='o', latlon=True) 
+	plt.draw()
+	plt.pause(0.1)
 
-    def read_file(self):
-	global start_index
+    def read_file(self, old):
 	now = datetime.datetime.now()
-	#f = open('data/' + now.strftime("%Y-%m-%d") + '.dat', 'r+')	
 	#f = open('catkin_ws/src/Onboard-SDK-ROS-3.2/dji_sdk_demo/script/Atmotube/data/' + now.strftime("%Y-%m-%d") + '.dat', 'r+')
 
 	f = open('catkin_ws/src/Onboard-SDK-ROS-3.2/dji_sdk_demo/script/Atmotube/data/2019-07-25aaaa.dat', 'r+')
-        lines = f.readlines()
-	new = []
-	if lines != []:
-	    new = lines[start_index:]
-	    start_index = len(lines)
+        new = f.readlines()
+        #if we only want new data, only return the last line of the file
+        if not old:
+            new = new[len(new)-1]
         f.close()
 	print new
 	return new
@@ -103,45 +112,15 @@ class Plotter():
 	gp.fit(coords, temps) #idk exactly what fit does but it *Works(TM)*
 
 	latlon = np.array(list(product(lat_sample, lon_sample))) #these are the sample points
+	print "before predictions"
 	y_pred, MSE = gp.predict(latlon, return_std=True) #returns mean and the std dev
+	print "after predictions"
 
 	latp, lonp = latlon[:,0].reshape(res,res), latlon[:,1].reshape(res,res) #could use meshgrid for this?
 	tempp = np.reshape(y_pred,(res,res))
 	tempp = np.clip(tempp, 0, max(temps))
 	return latp, lonp, tempp
 
-if __name__ == "__main__": 
-    start_index = 0
+if __name__ == "__main__":
     plotter = Plotter()
     plotter.run()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	
