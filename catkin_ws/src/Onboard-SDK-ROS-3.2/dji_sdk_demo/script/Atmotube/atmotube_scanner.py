@@ -14,6 +14,8 @@ from socket import (
     HCI_FILTER,
 )
 
+#This file is for scanning the area for bluetooth advertisers and reading the data from it. The Atmotube doesn't have any sort of security mechanism; it just advertises all of the data and this program just picks it up off of the ground. The scan() function is the only thing that interfaces with the rest of the program. Everything else is pretty low-level, and because of that, it only works when run from root. 
+
 if not os.geteuid() == 0:
     sys.exit("script only works as root")
 
@@ -60,6 +62,8 @@ if err < 0:
         os.strerror(errnum)
     ))
 
+
+#This function scans the stream of data from the socket and checks to see if any of the addresses that it finds match the address of the Atmotube. If so, it reads the rest of the packet, picks out the data, and returns the voc, humidity, and temperature. 
 def scan():
     voc = 0.0
     humidity = 0
@@ -69,13 +73,17 @@ def scan():
     while not is_done:	
 	current_time = time.time()
         data = sock.recv(1024)
-        # print bluetooth address from LE Advert. packet
+        #Get bluetooth address fr. BLE advertising packet
         address = ':'.join("{0:02x}".format(ord(x)) for x in data[12:6:-1])
+	#this address is the bluetooth address of your device. This can be found by just looking for it with your phone's bluetooth menu, or through the Atmotube app, etc. 
         if(address == 'e2:b1:08:f4:60:26'):
     	    data = ':'.join("{0:02x}".format(ord(x)) for x in data)
+
+	    #https://atmotube.com/pages/api?view=en this is where you can find the format of the Atmotube advertising packets, and just parse the string for whatever you need.
+	    #Side note, I found that the app on that page (NRf connect) was actually quite useful when going through the project, mostly to double-check that the numbers I was
+	    #getting from this were correct.
 	    start_index = data.find("ff:ff:ff:") + 9
 	    important_info = data[start_index:(len(data) - 3)]
-
 	    voc = int(important_info[:5].replace(":",""), 16) / 100.0 
 	    humidity = int(important_info[6:8], 16)
 	    temperature = int(important_info[9:11], 16)
