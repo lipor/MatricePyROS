@@ -64,4 +64,5 @@ Running up the Drone
          • All the codes for the drone commands are under the folder scripts in dji_sdk_demo folder. 
          • Read the comments made in the files for making changes accordingly.
     
-    
+ 
+ There is also a side-project for taking data from an Atmotube air quality sensor, pairing that with GPS data from the drone, plotting that over a Matplotlib Basemap of the area, and doing a Gaussian Process Regression on the data. That can be found in catkin_ws/src/Onboard -SDK-ROS-3.2/dji_sdk_demo/script/Atmotube. Instructions more applicable to that project are detailed in the README in that file. 
