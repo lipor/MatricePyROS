@@ -87,7 +87,7 @@ A simple autonomous test program, for example, MatricePyROS/catkin_ws/src/Onboar
 This was done using systemd services- https://www.shubhamdipt.com/blog/how-to-create-a-systemd-service-in-linux/
 I used two services so that the ROSCORE could start, as that is necessary for the drone to communicate with the program. 
 
-#####dronestart.service- this launches ROS
+##### dronestart.service- this launches ROS
 ```
 [Unit]
 Description=Launch ROS for DJI drone
@@ -100,7 +100,7 @@ Restart=on-abort
 [Install]
 WantedBy=multi-user.target                               
 ```
-#####dronestart2.service- this launches the test code
+##### dronestart2.service- this launches the test code
 ```
 [Unit]
 Description=launch test code for DJI
